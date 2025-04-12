@@ -4,8 +4,11 @@ import json, os
 from datetime import datetime
 
 DB_FILE = "resumes.duckdb"
-if os.path.exists(DB_FILE):
-    os.remove(DB_FILE)
+
+def init_db():
+    """Initialize the database and create tables if they do not exist."""
+    create_table()  # Calls create_table to ensure the table is created
+
 
 def connect():
     return duckdb.connect(DB_FILE)

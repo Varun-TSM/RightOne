@@ -1,4 +1,4 @@
-from langchain.embeddings import HuggingFaceEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 import pandas as pd

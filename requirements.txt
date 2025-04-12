@@ -1,2 +1,8 @@
 flask
 langchain_groq
+streamlit
+sqlite3-to-mysql
+smtplib
+email-validator
+python-dotenv
+pandas
