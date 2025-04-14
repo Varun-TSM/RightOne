@@ -66,10 +66,10 @@ def extract_text_from_doc(file_path):
 
 # List of your Groq API keys
 GROQ_API_KEYS = [
-    "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",
-    "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",
-    "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",
-    "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"
+    "API KEY 1",
+    "API KEY 2",
+    "API KEY 3",
+    "API KEY 4"
 ]
 
 def extract_first_json(text):
