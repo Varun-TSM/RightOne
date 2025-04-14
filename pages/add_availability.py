@@ -38,14 +38,27 @@ with left_col:
             end_time = None
 
         if end_time and st.button("➕ Add Availability"):
-            new_event = {
-                "id": f"event_{len(st.session_state.events)+1}",
-                "title": f"{start_time.strftime('%I:%M %p')} - {end_time.strftime('%I:%M %p')}",
-                "start": datetime.datetime.combine(selected_date, start_time).isoformat(),
-                "end": datetime.datetime.combine(selected_date, end_time).isoformat(),
-            }
-            st.session_state.events.append(new_event)
-            st.success("✅ Availability Added!")
+            new_start = datetime.datetime.combine(selected_date, start_time).isoformat()
+            new_end = datetime.datetime.combine(selected_date, end_time).isoformat()
+
+            # Check for duplicates
+            is_duplicate = any(
+                ev["start"] == new_start and ev["end"] == new_end
+                for ev in st.session_state.events
+            )
+
+            if is_duplicate:
+                st.warning("⚠️ This availability slot already exists!")
+            else:
+                new_event = {
+                    "id": f"event_{len(st.session_state.events)+1}",
+                    "title": f"{start_time.strftime('%I:%M %p')} - {end_time.strftime('%I:%M %p')}",
+                    "start": new_start,
+                    "end": new_end,
+                }
+                st.session_state.events.append(new_event)
+                st.success("✅ Availability Added!")
+
 
 with right_col:
     st.header("📅 Calendar Preview")
@@ -87,15 +100,20 @@ st.divider()
 if st.session_state.events:
     if st.button("✅ Submit All Availabilities"):
         if email:
-            interviewer_id = get_interviewer_id(email)  # Assuming db_manager handles this
-            for event in st.session_state.events:
-                start_dt = datetime.datetime.fromisoformat(event['start'])
-                end_dt = datetime.datetime.fromisoformat(event['end'])
-                add_availability(interviewer_id, start_dt.date(), start_dt.time(), end_dt.time())
-            st.success("🎉 All availabilities submitted successfully!")
-            st.session_state.events = []
+            interviewer_id = get_interviewer_id(email)  # Check if the email exists in the DB
+            if interviewer_id:
+                # Proceed with saving availability
+                for event in st.session_state.events:
+                    start_dt = datetime.datetime.fromisoformat(event['start'])
+                    end_dt = datetime.datetime.fromisoformat(event['end'])
+                    add_availability(interviewer_id, start_dt.date(), start_dt.time(), end_dt.time())
+                st.success("🎉 All availabilities submitted successfully!")
+                st.session_state.events = []  # Clear the events list after submission
+            else:
+                st.error("🚨 Access Denied: Interviewer email not found.")
         else:
             st.error("🚨 Please enter Interviewer's email first.")
+
 
 
 

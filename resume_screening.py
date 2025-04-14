@@ -11,7 +11,8 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from jd_parser import extract_jd_data 
 from resume_parser import extract_resume_data, SUPPORTED_EXTENSIONS
-from database.duckdb_handler import (
+from db_manager import add_candidate
+from sqlite_handler import (
     init_db, create_table, insert_resume,
     fetch_latest_resumes, is_resume_already_stored
 )
@@ -19,7 +20,6 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from sklearn.metrics.pairwise import cosine_similarity
 
 # ---------- Initialization ----------
-init_db()
 create_table()
 st.set_page_config(page_title="rightOne - Resume Screener", layout="wide")
 
@@ -132,7 +132,6 @@ if jd_df is not None:
 else:
     st.warning("⚠️ No JD Excel found.")
 
-# ---------- Matching Resumes ----------
 st.header("🏆 Resume Matching")
 
 def get_top_matching_resumes(df: pd.DataFrame, jd_text: str, threshold: float = 0.3, top_n: int = 10):
@@ -153,8 +152,18 @@ if parsed_df is not None and jd_df is not None:
                     st.warning("⚠️ No suitable matches found.")
                 else:
                     st.success("✅ Top matches retrieved!")
-                    st.dataframe(top_matches)
 
+                    # Store top matching resumes in the database
+                    for _, row in top_matches.iterrows():
+                        name = row.get("name", "")
+                        phone = row.get("phone", "")
+                        email = row.get("email", "")
+                        if email:  # Ensure email is present
+                            add_candidate(name, phone, email)
+
+                    st.info("💾 Top matching candidates added to the database.")
+
+                    # Optionally, save the results to an Excel file
                     output_excel = "top_resume_matches_full_details.xlsx"
                     top_matches.to_excel(output_excel, index=False)
                     st.download_button(
@@ -166,39 +175,40 @@ if parsed_df is not None and jd_df is not None:
             except Exception as e:
                 st.error(f"❌ Error during matching: {e}")
 
-# ---------- Email Notification ----------
-st.header("✉️ Notify Interviewer via Email")
-interviewer_email = st.text_input("Interviewer Email", placeholder="e.g. recruiter@company.com")
 
-if interviewer_email and st.button("📧 Send Interview Slot Email"):
-    with st.spinner("Sending email..."):
-        try:
-            sender_email = "varunmayilvaganan11@gmail.com"
-            sender_password = "ykdx wymo kayk gxbi"
-            subject = "Interview Slot Selection"
-            body = """
-            Hello,
+# # ---------- Email Notification ----------
+# st.header("✉️ Notify Interviewer via Email")
+# interviewer_email = st.text_input("Interviewer Email", placeholder="e.g. recruiter@company.com")
 
-            We are scheduling interviews. Kindly provide your available slots via the link below:
+# if interviewer_email and st.button("📧 Send Interview Slot Email"):
+#     with st.spinner("Sending email..."):
+#         try:
+#             sender_email = "varunmayilvaganan11@gmail.com"
+#             sender_password = "ykdx wymo kayk gxbi"
+#             subject = "Interview Slot Selection"
+#             body = """
+#             Hello,
 
-            👉 http://localhost:8501/add_availability
+#             We are scheduling interviews. Kindly provide your available slots via the link below:
 
-            Best regards,  
-            HR Team
-            """
+#             👉 http://localhost:8501/add_availability
 
-            msg = MIMEMultipart()
-            msg['From'] = sender_email
-            msg['To'] = interviewer_email
-            msg['Subject'] = subject
-            msg.attach(MIMEText(body, 'plain'))
+#             Best regards,  
+#             HR Team
+#             """
 
-            server = smtplib.SMTP('smtp.gmail.com', 587)
-            server.starttls()
-            server.login(sender_email, sender_password)
-            server.sendmail(sender_email, interviewer_email, msg.as_string())
-            server.quit()
+#             msg = MIMEMultipart()
+#             msg['From'] = sender_email
+#             msg['To'] = interviewer_email
+#             msg['Subject'] = subject
+#             msg.attach(MIMEText(body, 'plain'))
 
-            st.success("✅ Email sent successfully!")
-        except Exception as e:
-            st.error(f"❌ Failed to send email: {e}")
+#             server = smtplib.SMTP('smtp.gmail.com', 587)
+#             server.starttls()
+#             server.login(sender_email, sender_password)
+#             server.sendmail(sender_email, interviewer_email, msg.as_string())
+#             server.quit()
+
+#             st.success("✅ Email sent successfully!")
+#         except Exception as e:
+#             st.error(f"❌ Failed to send email: {e}")

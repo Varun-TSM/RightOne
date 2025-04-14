@@ -9,8 +9,12 @@ with st.form("add_interviewer_form"):
 
     if submitted:
         if email:
-            add_interviewer(email)
-            st.success(f"✅ Interviewer {email} added successfully!")
+            added = add_interviewer(email)
+            if added:
+                st.success(f"✅ Interviewer {email} added successfully!")
+            else:
+                st.info(f"ℹ️ Interviewer {email} is already in the database.")
         else:
             st.error("⚠️ Please enter a valid email address.")
+
 
