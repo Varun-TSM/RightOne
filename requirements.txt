@@ -1,10 +1,13 @@
 flask
 langchain_groq
-streamlit
+streamlit-calendar
 sqlite3-to-mysql
-smtplib
 email-validator
 python-dotenv
-pandas
-langchain_community
+langchain_huggingface
+duckdb
+pdfplumber
+six
+pdfminer
+textract==1.6.3
 langchain_community

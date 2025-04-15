@@ -1,0 +1,49 @@
+UZAIR UL HASSAN
+Full Stack Developer
+% uzairulhassan24@gmail.com &, 9701318210 @ Hyderabad, Telangana, India
+
+ff https://www.linkedin.com/in/uzair-ul-hassan-31b983248/ €) https://github.com/Uzair-Ul-Hassan
+
+Education
+
+Muffakham Jah College Of Engineering and Technology 08/2020 - 08/2024
+Narayana Junior College 06/2018 - 03/2020
+St. Joseph's Public School 06/2008 - 03/2018
+Profile
+
+Hi there! I'm Uzair. | am a Full stack developer with an amazing ability to develop websites that are both
+functional and aesthetically pleasing. | have a strong understanding of web standards and best practices, and |
+am passionate about creating websites that users will find easy to use and visually appealing. | am also
+proficient in a variety of programming languages and tools, and | have a proven track record of delivering
+successful projects on time and within budget. | am a team player who is always willing to lend a helping hand,
+and | am confident in my ability to contribute to any project. | am looking for an opportunity to use my skills
+and experience to make a positive impact on the web.
+
+Skills
+
+Javascript ReactJS
+TailwindCss NextJS
+ExpressJS MongoDB
+NodeJS AWS
+Prisma Rust
+Serverless
+
+Professional Experience
+
+Frontend Developer, @EnergyEta 12/2023 - 05/2024
+Experienced Next.js developer with a proven track record of building dynamic and
+
+responsive web applications, leveraging React components and server-side
+
+rendering for optimal performance and user experience.
+
+Full Stack Developer, @Manbal.ai 05/2023 - 01/2024
+Passionate Full Stack Developer with a focus on Next.js, Node.js, and MongoDB,
+
+seamlessly blending front-end and back-end expertise. Skilled in crafting
+
+responsive user interfaces, robust server-side logic, and efficient data storage
+
+solutions. Committed to delivering cutting-edge web applications that elevate user
+
+experiences.

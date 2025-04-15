@@ -1,0 +1,24 @@
+# Ignore Python cache
+__pycache__/
+*.py[cod]
+
+# Ignore virtual environments
+hr_env/
+env/
+
+# Ignore environment variables
+.env
+
+# Ignore system files
+.DS_Store
+database.db
+
+# Ignore logs and temp files
+*.log
+*.tmp
+
+
+# Ignore compiled files
+*.class
+*.o
+*.exe

@@ -63,7 +63,7 @@ if uploaded_file and st.button("📤 Extract & Store Resumes"):
 # ---------- Paste JD ----------
 st.header("📝 Paste Job Description")
 jd_text = st.text_area("Enter the job description below:", height=250, placeholder="e.g. We're hiring a data scientist...")
-
+jd_df= None
 if jd_text and st.button("🔍 Parse JD"):
     with st.spinner("Parsing JD using ChatGroq..."):
         try:
@@ -74,7 +74,7 @@ if jd_text and st.button("🔍 Parse JD"):
                 st.json(jd_result)
 
                 jd_result['required_skills'] = ', '.join(jd_result['required_skills'])
-                jd_df = pd.DataFrame([jd_result])
+                jd_df = pd.DataFrame([jd_result]) if jd_result else None
                 jd_df.to_excel("job_description.xlsx", index=False)
 
                 st.download_button(
@@ -84,6 +84,7 @@ if jd_text and st.button("🔍 Parse JD"):
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
             else:
+                jd_df = None
                 st.error("❌ Failed to parse JD.")
         except Exception as e:
             st.error(f"Error: {e}")
@@ -103,9 +104,11 @@ if not stored_df.empty:
 st.header("🔗 Prepare Embedding for Matching")
 
 parsed_df = None
+
 if not stored_df.empty:
+    jd_df = pd.read_excel("job_description.xlsx") if os.path.exists("job_description.xlsx") else None
     try:
-        jd_df = pd.read_excel("job_description.xlsx") if os.path.exists("job_description.xlsx") else None
+        
         parsed_dicts = stored_df["parsed_json"].apply(json.loads)
         parsed_df = pd.DataFrame(parsed_dicts.tolist())
         parsed_df["filename"] = stored_df["filename"].values
@@ -174,41 +177,3 @@ if parsed_df is not None and jd_df is not None:
                     )
             except Exception as e:
                 st.error(f"❌ Error during matching: {e}")
-
-
-# # ---------- Email Notification ----------
-# st.header("✉️ Notify Interviewer via Email")
-# interviewer_email = st.text_input("Interviewer Email", placeholder="e.g. recruiter@company.com")
-
-# if interviewer_email and st.button("📧 Send Interview Slot Email"):
-#     with st.spinner("Sending email..."):
-#         try:
-#             sender_email = "varunmayilvaganan11@gmail.com"
-#             sender_password = "ykdx wymo kayk gxbi"
-#             subject = "Interview Slot Selection"
-#             body = """
-#             Hello,
-
-#             We are scheduling interviews. Kindly provide your available slots via the link below:
-
-#             👉 http://localhost:8501/add_availability
-
-#             Best regards,  
-#             HR Team
-#             """
-
-#             msg = MIMEMultipart()
-#             msg['From'] = sender_email
-#             msg['To'] = interviewer_email
-#             msg['Subject'] = subject
-#             msg.attach(MIMEText(body, 'plain'))
-
-#             server = smtplib.SMTP('smtp.gmail.com', 587)
-#             server.starttls()
-#             server.login(sender_email, sender_password)
-#             server.sendmail(sender_email, interviewer_email, msg.as_string())
-#             server.quit()
-
-#             st.success("✅ Email sent successfully!")
-#         except Exception as e:
-#             st.error(f"❌ Failed to send email: {e}")

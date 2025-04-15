@@ -1,5 +1,10 @@
 from db_manager import init_db, get_all_bookings, get_all_reschedule_requests, update_reschedule_status, update_invite_status
-from email_utils import send_invite_email
+
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+from utils.candidate_email import shortlisted_email
+from utils.interview import send_interview_email
 import streamlit as st
 
 # Initialize the DB
@@ -125,7 +130,7 @@ with tab2:
                 if email_sent_status == "Not Sent":
                     if st.button("Send", key=f"send_{booking_id}"):  # Unique key
                         try:
-                            send_invite_email(
+                            send_interview_email(
                                 candidate_email=candidate_email,
                                 interviewer_email=interviewer_email,
                                 date=date,

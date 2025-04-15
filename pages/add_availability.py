@@ -3,6 +3,7 @@ from streamlit_calendar import calendar
 import datetime
 from db_manager import get_interviewer_id, add_availability
 
+
 st.set_page_config(page_title="Add Interviewer Availability", layout="wide")
 st.title("📅 Interviewer Availability Management System")
 
@@ -27,9 +28,20 @@ with left_col:
     else:
         # Define time slots (10AM to 8PM, half-hour slots)
         time_options = [datetime.time(hour=h, minute=m) for h in range(10, 20+1) for m in (0, 30)]
+        time_options = [datetime.time(hour=h, minute=m) for h in range(10, 20+1) for m in (0, 30)]
+        current_time = datetime.datetime.now().time()
+        one_hour_later = (datetime.datetime.combine(datetime.date.today(), current_time) + datetime.timedelta(hours=1)).time()
 
-        start_time = st.selectbox("Start Time", time_options, key="start_time")
-        valid_end_times = [t for t in time_options if t > start_time]
+        # Filter time options to only include times at least one hour ahead
+        valid_start_times = [t for t in time_options if t >= one_hour_later]
+        
+        if selected_date == datetime.date.today():
+                valid_start_times = [t for t in time_options if t >= one_hour_later]
+        else:
+                valid_start_times = time_options  # Use full range for future dates
+             
+        start_time = st.selectbox("Start Time", valid_start_times, key="start_time")
+        valid_end_times = [t for t in time_options if t > start_time] if start_time is not None else []
 
         if valid_end_times:
             end_time = st.selectbox("End Time", valid_end_times, key="end_time")
@@ -64,9 +76,11 @@ with right_col:
     st.header("📅 Calendar Preview")
 
     calendar_options = {
-        "editable": False,
-        "initialView": "dayGridMonth",
-        "selectable": False,
+        "editable": True,
+        "initialView": "timeGridWeek",
+        "slotMinTime": "10:00:00",
+        "slotMaxTime": "22:00:00",
+        "selectable": True,
         "events": st.session_state.events,
         "headerToolbar": {
             "left": "prev,next today",

@@ -15,7 +15,7 @@ def extract_jd_data(jd_text, max_retries=3):
     """
     llm = ChatGroq(
         temperature=0,
-        groq_api_key="YOUR_API_KEY",
+        groq_api_key="API_KEY5",
         model_name="llama-3.1-8b-instant"
     )
 
