@@ -88,6 +88,14 @@ def create_tables():
 
 # ──────────────────────── INTERVIEWER FUNCTIONS ──────────────────────── #
 
+def get_all_interviewers():
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT email FROM interviewers")
+    emails = [row[0] for row in cursor.fetchall()]
+    conn.close()
+    return emails
+
 def add_interviewer(email):
     conn = connect_db()
     cursor = conn.cursor()
@@ -212,6 +220,11 @@ def is_slot_booked(interviewer_id, slot_date, slot_time):
     return result is not None
 
 def book_slot(candidate_email, interviewer_email, slot_date, slot_time, timezone_name='UTC'):
+    # Check if the candidate is already booked with this interviewer for this date
+    if is_candidate_already_booked_for_interviewer(candidate_email, interviewer_email, slot_date):
+        raise ValueError(f"Candidate {candidate_email} is already booked for an interview with {interviewer_email} on {slot_date}.")
+
+    # Rest of the existing booking logic
     conn = connect_db()
     cursor = conn.cursor()
 
@@ -238,6 +251,22 @@ def book_slot(candidate_email, interviewer_email, slot_date, slot_time, timezone
 
     conn.commit()
     conn.close()
+
+
+def is_candidate_already_booked_for_interviewer(candidate_email, interviewer_email, slot_date):
+    candidate_id = get_candidate_id(candidate_email)
+    interviewer_id = get_interviewer_id(interviewer_email)
+
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT 1 FROM bookings
+        WHERE candidate_id = ? AND interviewer_id = ? AND slot_date = ?
+    """, (candidate_id, interviewer_id, slot_date))
+
+    result = cursor.fetchone()
+    conn.close()
+    return result is not None
 
 
 def has_candidate_booked(candidate_email):
@@ -428,7 +457,4 @@ def update_invite_status(booking_id, email_sent_status):
     c.execute("UPDATE bookings SET email_sent_status = ? WHERE id = ?", (email_sent_status, booking_id))
     conn.commit()
     conn.close()
-    
-
-
     

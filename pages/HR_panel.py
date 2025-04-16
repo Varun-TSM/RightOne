@@ -1,6 +1,6 @@
 from db_manager import init_db, get_all_bookings, get_all_reschedule_requests, update_reschedule_status, update_invite_status
-from email_utils import send_invite_email
 import streamlit as st
+from utils.interview import send_interview_email
 
 # Initialize the DB
 init_db()
@@ -77,22 +77,35 @@ with tab1:
 
 
 
-# ------------------ TAB 2: Bookings ------------------ #
 with tab2:
     bookings = get_all_bookings()
 
     if bookings:
         st.subheader("Interview Invitations")
 
-        # Table header
-        col1, col2, col3, col4, col5 = st.columns([3, 3, 3, 2, 2])
-        col1.markdown("**📧 Candidate Email**")
-        col2.markdown("**👤 Interviewer Email**")
-        col3.markdown("**📅 Slot (Date & Time)**")
-        col4.markdown("**📌 Status**")
-        col5.markdown("**✉️ Action**")
+        # Initialize session state for selected bookings
+        if "selected_bookings" not in st.session_state:
+            st.session_state.selected_bookings = set()
+
+        # Filter only those not sent yet
+        unsent_bookings = [b for b in bookings if b.get('email_sent_status', 'Not Sent') == "Not Sent"]
+
+        # Select All Checkbox
+        select_all = st.checkbox("Select All Invitations to Send", key="select_all_checkbox", disabled=not unsent_bookings)
+
+        # Table headers
+        col1, col2, col3, col4, col5, col6 = st.columns([0.5, 3, 3, 3, 2, 2])
+        col1.markdown("**✅**")
+        col2.markdown("**📧 Candidate Email**")
+        col3.markdown("**👤 Interviewer Email**")
+        col4.markdown("**📅 Slot (Date & Time)**")
+        col5.markdown("**📌 Status**")
+        col6.markdown("**✉️ Action**")
 
         st.markdown("---")
+
+        # Track selection
+        selected_ids = []
 
         for idx, booking in enumerate(bookings):
             candidate_email = booking['candidate_email']
@@ -101,37 +114,50 @@ with tab2:
             time = booking['slot_time']
             timezone = booking['timezone']
             email_sent_status = booking.get('email_sent_status', 'Not Sent')
-            booking_id = booking['id']  # Unique ID per booking
+            booking_id = booking['id']
 
-            col1, col2, col3, col4, col5 = st.columns([3, 3, 3, 2, 2])
-            col1.markdown(candidate_email)
-            col2.markdown(interviewer_email)
-            col3.markdown(f"{date} {time} ({timezone})")
+            # Use columns
+            col1, col2, col3, col4, col5, col6 = st.columns([0.5, 3, 3, 3, 2, 2])
 
-            # Show status tag
+            # Select checkbox
+            checked = False
+            if email_sent_status == "Not Sent":
+                if select_all:
+                    checked = True
+                checked = col1.checkbox("", value=checked, key=f"select_{booking_id}")
+                if checked:
+                    selected_ids.append(booking_id)
+            else:
+                col1.markdown("")
+
+            # Booking Info
+            col2.markdown(candidate_email)
+            col3.markdown(interviewer_email)
+            col4.markdown(f"{date} {time} ({timezone})")
+
+            # Status Tag
             if email_sent_status == "Sent":
-                col4.markdown(
+                col5.markdown(
                     "<span style='background-color:#d4edda; color:#155724; padding:4px 10px; border-radius:10px;'>Sent</span>",
                     unsafe_allow_html=True
                 )
             else:
-                col4.markdown(
+                col5.markdown(
                     "<span style='background-color:#fff3cd; color:#856404; padding:4px 10px; border-radius:10px;'>Not Sent</span>",
                     unsafe_allow_html=True
                 )
 
-            # Action button
-            with col5:
+            # Individual send
+            with col6:
                 if email_sent_status == "Not Sent":
-                    if st.button("Send", key=f"send_{booking_id}"):  # Unique key
+                    if st.button("Send", key=f"send_{booking_id}"):
                         try:
-                            send_invite_email(
+                            send_interview_email(
                                 candidate_email=candidate_email,
                                 interviewer_email=interviewer_email,
                                 date=date,
                                 time=time,
                                 timezone=timezone,
-                                for_hr=True
                             )
                             update_invite_status(booking_id, "Sent")
                             st.success(f"✅ Invitation sent to {candidate_email}")
@@ -143,8 +169,31 @@ with tab2:
 
         st.markdown("---")
 
+        # Send to all selected
+        if selected_ids:
+            if st.button("📨 Send Invitations to All Selected"):
+                for booking in bookings:
+                    if booking['id'] in selected_ids and booking.get('email_sent_status', 'Not Sent') == "Not Sent":
+                        try:
+                            send_interview_email(
+                                candidate_email=booking['candidate_email'],
+                                interviewer_email=booking['interviewer_email'],
+                                date=booking['slot_date'],
+                                time=booking['slot_time'],
+                                timezone=booking['timezone'],
+                            
+                            )
+                            update_invite_status(booking['id'], "Sent")
+                        except Exception as e:
+                            st.error(f"❌ Error sending to {booking['candidate_email']}: {str(e)}")
+                st.success("✅ Invitations sent to all selected candidates.")
+                st.rerun()
+        else:
+            st.warning("No invitations selected to send.")
+
     else:
         st.info("No interview bookings available.")
+
 
 
 

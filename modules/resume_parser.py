@@ -7,7 +7,6 @@ from langchain_groq import ChatGroq
 import textract
 import subprocess
 import docx2txt 
-import docx2txt
 from pdfminer.high_level import extract_text
 import pytesseract
 from pdf2image import convert_from_path

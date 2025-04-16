@@ -1,7 +1,7 @@
 import streamlit as st
 from streamlit_calendar import calendar
 import datetime
-from db_manager import get_interviewer_id, add_availability
+from db_manager import get_all_interviewers, get_interviewer_id, add_availability
 
 st.set_page_config(page_title="Add Interviewer Availability", layout="wide")
 st.title("📅 Interviewer Availability Management System")
@@ -10,8 +10,23 @@ st.title("📅 Interviewer Availability Management System")
 if "events" not in st.session_state:
     st.session_state.events = []
 
-# --- Input: Interviewer's Email ---
-email = st.text_input("Enter Interviewer's Email:")
+interviewers = get_all_interviewers()
+
+# Determine what to show in the select box
+if interviewers:
+    interviewers_with_placeholder = ["Your email-id"] + interviewers
+else:
+    interviewers_with_placeholder = ["No interviewers available"]
+
+# Always show the select box
+email = st.selectbox("Select your email", interviewers_with_placeholder, index=0)
+
+# Logic to handle invalid selections
+if email in ["Your email-id", "No interviewers available"]:
+    st.warning("Note : Add interviewer email to database")
+
+
+
 
 # --- Main Layout ---
 left_col, right_col = st.columns([1, 2])

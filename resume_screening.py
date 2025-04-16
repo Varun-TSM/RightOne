@@ -9,8 +9,8 @@ import numpy as np
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from jd_parser import extract_jd_data 
-from resume_parser import extract_resume_data, SUPPORTED_EXTENSIONS
+from modules.jd_parser import extract_jd_data 
+from modules.resume_parser import extract_resume_data, SUPPORTED_EXTENSIONS
 from db_manager import add_candidate
 from sqlite_handler import (
     init_db, create_table, insert_resume,
