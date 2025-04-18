@@ -1,6 +1,8 @@
 from db_manager import init_db, get_all_bookings, get_all_reschedule_requests, update_reschedule_status, update_invite_status
 import streamlit as st
 from utils.interview import send_interview_email
+import sqlite3
+from utils.candidate_email import shortlisted_email
 
 # Initialize the DB
 init_db()
@@ -12,68 +14,74 @@ st.title("HR Interview Panel")
 tab1, tab2, tab3 = st.tabs(["👤 HR Connect", "📅 Interview invites", "🔁 Reschedule Requests"])
 
 # ------------------ TAB 1: Resume Shortlist ------------------ #
-with tab1: 
+with tab1:
     st.subheader("Shortlisted Candidates")
 
-    # Sample data (replace with database fetch later)
-    candidates = [
-        {
-            "name": "John Smith",
-            "email": "john.smith@example.com",
-            "phone": "+1 234-567-8901",
-            "status": "Pending"
-        },
-        {
-            "name": "Emily Johnson",
-            "email": "emily.johnson@example.com",
-            "phone": "+1 234-567-8902",
-            "status": "Contacted"
-        },
-        {
-            "name": "Michael Brown",
-            "email": "michael.brown@example.com",
-            "phone": "+1 234-567-8903",
-            "status": "Pending"
-        }
-    ]
+    def get_candidates():
+        conn = sqlite3.connect("candidates.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, name, email, phone, status FROM candidates")
+        rows = cursor.fetchall()
+        conn.close()
+        return [
+            {"id": row[0], "name": row[1], "email": row[2], "phone": row[3], "status": row[4]}
+            for row in rows
+        ]
 
-    # Header row with 3 columns
+    def update_status(candidate_id, new_status):
+        conn = sqlite3.connect("candidates.db")
+        cursor = conn.cursor()
+        cursor.execute("UPDATE candidates SET status = ? WHERE id = ?", (new_status, candidate_id))
+        conn.commit()
+        conn.close()
+
+    candidates = get_candidates()
+
+    # Header
     header1, header2, header3 = st.columns([4, 2, 2])
     header1.markdown("**👤 Candidate Details**")
     header2.markdown("**📌 Status**")
     header3.markdown("**⚙️ Actions**")
     st.markdown("---")
 
-    # Display each candidate row
     for idx, c in enumerate(candidates):
         col1, col2, col3 = st.columns([4, 2, 2])
 
-        # Candidate info
         with col1:
             st.markdown(f"**{c['name']}**  \n📧 {c['email']}  \n📞 {c['phone']}")
 
-        # Status badge
         with col2:
-            if c["status"] == "Pending":
-                st.markdown(
-                    "<span style='background-color:#fff3cd; color:#856404; padding:4px 10px; border-radius:10px;'>Pending</span>",
-                    unsafe_allow_html=True)
-            elif c["status"] == "Contacted":
-                st.markdown(
-                    "<span style='background-color:#d4edda; color:#155724; padding:4px 10px; border-radius:10px;'>Contacted</span>",
-                    unsafe_allow_html=True)
+            badge = {
+                "Pending": ("#fff3cd", "#856404"),
+                "Contacted": ("#d4edda", "#155724"),
+                "Rejected": ("#f8d7da", "#721c24"),
+            }
+            bg, color = badge.get(c["status"], ("#e2e3e5", "#383d41"))
+            st.markdown(
+                f"<span style='background-color:{bg}; color:{color}; padding:4px 10px; border-radius:10px;'>{c['status']}</span>",
+                unsafe_allow_html=True
+            )
 
-        # Action buttons
         with col3:
-            col3_1, col3_2 = st.columns(2)
-            if col3_1.button("✅", key=f"accept_{idx}"):
-                st.success(f"Accepted {c['name']}")
-                # Update DB or candidate list here
-            if col3_2.button("❌", key=f"reject_{idx}"):
-                st.warning(f"Rejected {c['name']}")
-                # Update DB or candidate list here
+            col3_1, col3_2 = col3.columns(2)
+
+            # Disable buttons if already Contacted or Rejected
+            disabled = c["status"] in ["Contacted", "Rejected"]
+
+            if col3_1.button("✅", key=f"accept_{idx}", disabled=disabled):
+                update_status(c["id"], "Contacted")
+                st.success(f"{c['name']} marked as Contacted")
+                shortlisted_email(c["email"], c["name"])
+                st.rerun()
+
+            if col3_2.button("❌", key=f"reject_{idx}", disabled=disabled):
+                update_status(c["id"], "Rejected")
+                st.warning(f"{c['name']} marked as Rejected")
+                st.rerun()
 
         st.markdown("---")
+
+
 
 
 

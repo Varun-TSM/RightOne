@@ -10,11 +10,11 @@ GMAIL_PASSWORD = "jfvq qqkq gwrx ovlq"
 def send_interview_email(candidate_email, interviewer_email, date, time, timezone):
     subject = "Official Interview Invitation"
     body = f"""
-    <html>
+   <html>
         <body style="font-family: Arial, sans-serif;">
             <p>Dear Candidate,</p>
 
-            <p>We are pleased to inform you that you have been shortlisted for the next round of interview</b>.</p>
+            <p>As per your availabilty this is to inform you that your slot has been confirmed</p>
             
             <table style="border: 1px solid #ddd; padding: 10px; background-color: #f9f9f9;">
                 <tr><td><b>Interview Date:</b></td><td>{date}</td></tr>
@@ -26,7 +26,7 @@ def send_interview_email(candidate_email, interviewer_email, date, time, timezon
 
             <p>Looking forward to your participation.</p>
 
-            <p>Best regards,<br><b>HR Team</b></p>
+            <p>Best regards,<br><b>HR Team - TSM</b></p>
         </body>
     </html>
     """

@@ -409,7 +409,8 @@ def update_reschedule_status(booking_id, status):
             UPDATE bookings
             SET slot_date = requested_date,
                 slot_time = requested_time,
-                request_status = 'Approved'
+                request_status = 'Approved',
+                email_sent_status = 'Not Sent'
             WHERE id = ?
         """, (booking_id,))
     else:

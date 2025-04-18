@@ -24,7 +24,7 @@ create_table()
 st.set_page_config(page_title="rightOne - Resume Screener", layout="wide")
 
 st.markdown("""<style>.stAppHeader { visibility: hidden; }</style>""", unsafe_allow_html=True)
-st.title("🤖 rightOne - Resume Screening Assistant")
+st.title("🤖 rightOne - an HR assisant")
 
 # ---------- Upload Resumes ----------
 st.header("📥 Upload Resumes (ZIP)")
@@ -176,39 +176,3 @@ if parsed_df is not None and jd_df is not None:
                 st.error(f"❌ Error during matching: {e}")
 
 
-# # ---------- Email Notification ----------
-# st.header("✉️ Notify Interviewer via Email")
-# interviewer_email = st.text_input("Interviewer Email", placeholder="e.g. recruiter@company.com")
-
-# if interviewer_email and st.button("📧 Send Interview Slot Email"):
-#     with st.spinner("Sending email..."):
-#         try:
-#             sender_email = "varunmayilvaganan11@gmail.com"
-#             sender_password = "ykdx wymo kayk gxbi"
-#             subject = "Interview Slot Selection"
-#             body = """
-#             Hello,
-
-#             We are scheduling interviews. Kindly provide your available slots via the link below:
-
-#             👉 http://localhost:8501/add_availability
-
-#             Best regards,  
-#             HR Team
-#             """
-
-#             msg = MIMEMultipart()
-#             msg['From'] = sender_email
-#             msg['To'] = interviewer_email
-#             msg['Subject'] = subject
-#             msg.attach(MIMEText(body, 'plain'))
-
-#             server = smtplib.SMTP('smtp.gmail.com', 587)
-#             server.starttls()
-#             server.login(sender_email, sender_password)
-#             server.sendmail(sender_email, interviewer_email, msg.as_string())
-#             server.quit()
-
-#             st.success("✅ Email sent successfully!")
-#         except Exception as e:
-#             st.error(f"❌ Failed to send email: {e}")
