@@ -1,10 +1,11 @@
 from db_manager import init_db
+from modules.resume_parser import extract_resume_data
 init_db()
 from flask import Flask, request, jsonify
 import os
 import zipfile
 from datetime import datetime
-from sqlite_handler import insert_resume
+from sqlite_handler import insert_resume, is_resume_already_stored
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB
@@ -37,17 +38,22 @@ def upload_zip():
             for f in files if f.lower().endswith(allowed_ext)
         ]
 
+        for file_path in resume_files:
+            filename = os.path.basename(file_path)
+            if not is_resume_already_stored(filename):  # check DB
+                parsed_data = extract_resume_data(file_path)  # parse resume
+                insert_resume(filename, parsed_data)         # store in DB
+
         return jsonify({
-            "message": "✅ Resumes extracted and saved successfully.",
-            "save_path": extract_path,
-            "file_count": len(resume_files),
-            "filenames": [os.path.basename(f) for f in resume_files]
+            "message": "✅ All resumes parsed and stored.",
+            "file_count": len(resume_files)
         }), 200
 
     except zipfile.BadZipFile:
         return jsonify({"error": "❌ Invalid ZIP archive."}), 400
     except Exception as e:
         return jsonify({"error": f"❌ Something went wrong: {str(e)}"}), 500
+
 
 
 # # ----------------- 2. Parse JD -----------------

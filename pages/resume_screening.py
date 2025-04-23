@@ -21,7 +21,7 @@ from sqlite_handler import (
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from sklearn.metrics.pairwise import cosine_similarity
 
-def display_homepage():
+def Resume_Screener():
     # ---------- Initialization ----------
     create_table()
     # Load Font Awesome
@@ -29,14 +29,18 @@ def display_homepage():
 
     st.markdown("""
     <style>
-    .stFileUploader 
-    {
-        margin-top: 10px;
-        padding: 40px 25px;
-        border-radius: 15px;
-        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-        border: 1px solid #e2e2e2;
+   .stFileUploader {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 210px;
+    padding: 30px 25px;
+    margin-top: 15px; 
+    margin-bottom: 20px;
+    border-radius: 15px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    border: 2px solid #0C0950;
     }
+
     .stAppHeader{ visibility: hidden;
     display:none;}
     .stButton>button{
@@ -67,6 +71,9 @@ def display_homepage():
         right: 20px;
         z-index: 9999;
         pointer-events: none; /* Prevents interfering with clicks below */
+    }
+    .st-emotion-cache-1erivf3{
+        gap : 20px;
     }
 
     .stAlertContainer {
@@ -120,37 +127,20 @@ def display_homepage():
     col1, col2 = st.columns([1, 2])
 
     with col1:
-        st.markdown('<h5><i class="fas fa-file-archive"></i> Step 1: Upload Resumes (ZIP)</h5>', unsafe_allow_html=True)
+        st.markdown('<div style="padding-top: 10px;"><h5><i class="fas fa-file-archive"></i> Step 1: Upload Resumes (ZIP)</h5></div>', unsafe_allow_html=True)
         uploaded_file = st.file_uploader("", type=["zip"])
         if uploaded_file and not st.session_state.get("resumes_parsed"):
             if st.button("Extract & Store Resumes"):
                 with st.spinner("Processing resumes..."):
-                    try:
-                        files = {"file": (uploaded_file.name, uploaded_file.getvalue())}
-                        response = requests.post("http://127.0.0.1:5000/upload", files=files)
+                    files = {"file": (uploaded_file.name, uploaded_file.getvalue())}
+                    response = requests.post("http://127.0.0.1:5000/upload", files=files)
 
-                        if response.status_code == 200:
-                            data = response.json()
-                            save_path = data["save_path"]
+                    if response.status_code == 200:
+                        st.success("All resumes parsed and stored successfully.")
+                        st.session_state.resumes_parsed = True
+                    else:
+                        st.error(f"Backend Error: {response.text}")
 
-                            resume_files = glob.glob(os.path.join(save_path, "**"), recursive=True)
-                            resume_files = [
-                                f for f in resume_files
-                                if os.path.isfile(f) and os.path.splitext(f)[-1].lower() in SUPPORTED_EXTENSIONS
-                            ]
-
-                            for file_path in resume_files:
-                                filename = os.path.basename(file_path)
-                                if not is_resume_already_stored(filename):
-                                    parsed_data = extract_resume_data(file_path)
-                                    insert_resume(filename, parsed_data)
-
-                            st.success("All resumes parsed and stored successfully.")
-                            st.session_state.resumes_parsed = True  # ✅ Set flag here
-                        else:
-                            st.error(f"Backend Error: {response.text}")
-                    except Exception as e:
-                        st.error(f"Connection Error: {e}")
 
 
     with col2:
@@ -255,6 +245,9 @@ def display_homepage():
 
     # app information
     show_notice_box()
+    
+if __name__ == "__main__":
+    Resume_Screener()
 
 
 

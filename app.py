@@ -1,10 +1,10 @@
 import streamlit as st
-from pages.Home import homePage
-from pages.resume_screening import display_homepage
-from pages.add_availability import add_availability
-from pages.add_interviewer import add_interviewer
+from pages.home import homePage
+from pages.resume_screening import Resume_Screener
+from pages.add_availability import add_availabilities
+from pages.add_interviewer import add_interviewers
 from pages.book_slots import book_slots
-from pages.HR_panel import HrPanel
+from pages.hr_panel import HrPanel
 import base64
 
 # Set page configuration
@@ -16,16 +16,16 @@ def get_base64_image(image_path):
         return base64.b64encode(img_file.read()).decode()
 
 # Load your image and convert to base64
-logo_base64 = get_base64_image("pages/logo.png")  # ✅ Make sure this path is correct
+logo_base64 = get_base64_image("pages/logo.png")
 
 # Page routing using query parameters
 query_params = st.query_params
 page_title = query_params.get("page", "Home")
 page_map = {
     "Home": {"func": homePage},
-    "Resume Screening": {"func": display_homepage},
-    "Availability": {"func": add_availability},
-    "Interviewer": {"func": add_interviewer},
+    "Resume Screening": {"func": Resume_Screener},
+    "Availability": {"func": add_availabilities},
+    "Interviewer": {"func": add_interviewers},
     "Book Slots": {"func": book_slots},
     "HR Panel": {"func": HrPanel},
 }

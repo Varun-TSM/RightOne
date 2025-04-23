@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
+from pages import resume_screening
+from pages.resume_screening import Resume_Screener
+
 def homePage():
     # Custom CSS for the entire application with theme compatibility
     st.markdown("""
