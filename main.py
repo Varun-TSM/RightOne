@@ -1,4 +1,5 @@
 from db_manager import init_db
+from modules.jd_parser import extract_jd_data
 from modules.resume_parser import extract_resume_data
 init_db()
 from flask import Flask, request, jsonify
@@ -57,26 +58,19 @@ def upload_zip():
 
 
 # # ----------------- 2. Parse JD -----------------
-# @app.route('/parse-jd', methods=['POST'])
-# def parse_jd():
-#     try:
-#         data = request.get_json()
-#         jd_text = data.get("jd_text")
-#         if not jd_text:
-#             return jsonify({"error": "'jd_text' is required."}), 400
+@app.route('/parse_jd', methods=['POST'])
+def parse_jd():
+    data = request.json
+    jd_text = data.get("jd_text")
 
-#         parsed_data = extract_jd_data(jd_text)
-
-#         if parsed_data:
-#             return jsonify({
-#                 "message": "JD parsed successfully.",
-#                 "parsed_data": parsed_data
-#             }), 200
-#         else:
-#             return jsonify({"error": "Failed to parse JD."}), 500
-
-#     except Exception as e:
-#         return jsonify({"error": f"Error while parsing JD: {str(e)}"}), 500
+    try:
+        jd_result = extract_jd_data(jd_text)
+        if jd_result:
+            return jsonify(jd_result), 200
+        else:
+            return jsonify({"error": "JD parsing failed"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # # ----------------- 3. Store Parsed Resume -----------------
 # @app.route('/store-parsed-resume', methods=['POST'])

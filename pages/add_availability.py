@@ -79,7 +79,7 @@ def add_availabilities():
 
     </style>
     """, unsafe_allow_html=True)
-    st.markdown("<h2><i class='fas fa-calendar-check'></i> Interviewer Availability Management</h2>", unsafe_allow_html=True)
+    st.markdown("<h2><i class='fas fa-calendar-check'  style='color:#007BFF; margin-right: 8px;'></i> Interviewer Availability Management</h2>", unsafe_allow_html=True)
 
     # --- Initialization ---
     if "events" not in st.session_state:
@@ -104,7 +104,7 @@ def add_availabilities():
     left_col, right_col = st.columns([1, 2])
 
     with left_col:
-        st.markdown("<h4><i class='fas fa-plus-circle'></i> Add New Availability</h4>", unsafe_allow_html=True)
+        st.markdown("<h4><i class='fas fa-plus-circle'  style='color:#007BFF; margin-right: 8px;'></i> Add New Availability</h4>", unsafe_allow_html=True)
 
         selected_date = st.date_input("Select Date", min_value=datetime.date.today())
 
@@ -157,7 +157,7 @@ def add_availabilities():
                     st.success("Availability Added!")
 
     with right_col:
-        st.markdown("<h4><i class='fas fa-calendar-alt'></i> Calendar Preview</h4>", unsafe_allow_html=True)
+        st.markdown("<h4><i class='fas fa-calendar-alt' style='color:#007BFF; margin-right: 8px;'></i> Calendar Preview</h4>", unsafe_allow_html=True)
 
         calendar_options = {
             "editable": False,
@@ -178,7 +178,7 @@ def add_availabilities():
 
     # --- List all added events with Delete Option ---
     st.divider()
-    st.markdown("<h4><i class='fas fa-folder-open'></i> Current Availabilities</h4>", unsafe_allow_html=True)
+    st.markdown("<h4><i class='fas fa-folder-open' style='color:#007BFF; margin-right: 8px;'></i> Current Availabilities</h4>", unsafe_allow_html=True)
 
     if st.session_state.events:
         for idx, ev in enumerate(st.session_state.events):
@@ -191,7 +191,7 @@ def add_availabilities():
                     st.session_state.events.pop(idx)
                     st.rerun()
     else:
-        st.markdown("<div class='info-message'><i class='fas fa-info-circle'></i> No availabilities added yet.</div>", unsafe_allow_html=True)
+        st.markdown("<div class='info-message'><i class='fas fa-info-circle'  style='color:#007BFF; margin-right: 8px;'></i> No availabilities added yet.</div>", unsafe_allow_html=True)
 
     # --- Final Submit ---
     st.divider()

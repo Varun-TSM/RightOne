@@ -1,4 +1,4 @@
-from db_manager import init_db, get_all_bookings, get_all_reschedule_requests, update_reschedule_status, update_invite_status
+from db_manager import get_candidates, init_db, get_all_bookings, get_all_reschedule_requests, update_reschedule_status, update_invite_status, update_status
 import streamlit as st
 from utils.interview import send_interview_email
 import sqlite3
@@ -7,7 +7,7 @@ from utils.candidate_email import shortlisted_email
 def HrPanel():
     st.markdown('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"/>', unsafe_allow_html=True)
     init_db()
-    st.markdown('<h1><i class="fa-solid fa-users-line"></i>HR Panel</h1>', unsafe_allow_html=True)
+    st.markdown('<h1><i class="fa-solid fa-users-line" style="margin-right:10px; color:#007BFF;"></i>HR Panel</h1>', unsafe_allow_html=True)
     st.markdown("Welcome to the HR dashboard. Manage candidates, send invites, and handle reschedule requests from one place.")
 
     tab1, tab2, tab3 = st.tabs([
@@ -19,20 +19,6 @@ def HrPanel():
     # ------------------ TAB 1: Resume Shortlist ------------------ #
     with tab1:
 
-        def get_candidates():
-            conn = sqlite3.connect("candidates.db")
-            cursor = conn.cursor()
-            cursor.execute("SELECT id, name, email, phone, status FROM candidates")
-            rows = cursor.fetchall()
-            conn.close()
-            return [{"id": row[0], "name": row[1], "email": row[2], "phone": row[3], "status": row[4]} for row in rows]
-
-        def update_status(candidate_id, new_status):
-            conn = sqlite3.connect("candidates.db")
-            cursor = conn.cursor()
-            cursor.execute("UPDATE candidates SET status = ? WHERE id = ?", (new_status, candidate_id))
-            conn.commit()
-            conn.close()
 
         candidates = get_candidates()
 
@@ -42,8 +28,9 @@ def HrPanel():
             with st.container(border=True):
                 col1, col2, col3 = st.columns([4, 2, 2])
                 with col1:
-                    st.markdown(f"**🧑 {c['name']}**")
-                    st.markdown(f"📧 `{c['email']}`  \n📞 `{c['phone']}`")
+                    st.markdown(f"**<i class='fa-solid fa-user' style='margin-right:10px; color:#007BFF;'></i> {c['name']}**", unsafe_allow_html=True)
+                    st.markdown(f"<i class='fa-solid fa-envelope' style='margin-right:10px; color:#007BFF;'></i> `{c['email']}`  \n<i class='fa-solid fa-phone' style='margin-right:10px; color:#007BFF;'></i> `{c['phone']}`", unsafe_allow_html=True)
+
 
                 with col2:
                     badge_colors = {
@@ -70,12 +57,12 @@ def HrPanel():
                     if accept_col.button("✅", key=f"accept_{idx}", disabled=disabled):
                         update_status(c["id"], "Contacted")
                         shortlisted_email(c["email"], c["name"])
-                        st.success(f"🎯 {c['name']} marked as Contacted.")
+                        st.success(f"<i class='fa-solid fa-check-circle'></i> {c['name']} marked as Contacted.", icon=None)
                         st.rerun()
 
                     if reject_col.button("❌", key=f"reject_{idx}", disabled=disabled):
                         update_status(c["id"], "Rejected")
-                        st.warning(f"🚫 {c['name']} marked as Rejected.")
+                        st.warning(f"<i class='fa-solid fa-times-circle'></i> {c['name']} marked as Rejected.", icon=None)
                         st.rerun()
 
     # ------------------ TAB 2: Interview Invites ------------------ #
@@ -158,7 +145,7 @@ def HrPanel():
                                 update_invite_status(booking['id'], "Sent")
                             except Exception as e:
                                 st.error(f"Error sending to {booking['candidate_email']}: {e}")
-                    st.success("All selected invitations sent.")
+                    st.success("<i class='fa-solid fa-paper-plane'></i> All selected invitations sent.", icon=None)
                     st.rerun()
             else:
                 st.info("No invitations selected.")
@@ -173,22 +160,23 @@ def HrPanel():
         if reschedule_requests:
             for idx, request in enumerate(reschedule_requests):
                 with st.expander(f"🔄 {request['candidate_email']} requested reschedule", expanded=False):
-                    st.markdown(f"**🕒 Current Slot:** `{request['current_slot_date']} {request['current_slot_time']}`")
-                    st.markdown(f"**📅 Requested Slot:** `{request['requested_date']} {request['requested_time']}`")
-                    st.markdown(f"**📝 Reason:** _{request['reason']}_")
-                    st.markdown(f"**📌 Status:** `{request['status']}`")
+                    st.markdown(f"**<i class='fa-solid fa-clock'></i> Current Slot:** `{request['current_slot_date']} {request['current_slot_time']}`", unsafe_allow_html=True)
+                    st.markdown(f"**<i class='fa-solid fa-calendar-days'></i> Requested Slot:** `{request['requested_date']} {request['requested_time']}`", unsafe_allow_html=True)
+                    st.markdown(f"**<i class='fa-solid fa-pen'></i> Reason:** {request['reason']}", unsafe_allow_html=True)
+                    st.markdown(f"**<i class='fa-solid fa-thumbtack'></i> Status:** `{request['status']}`", unsafe_allow_html=True)
 
                     col1, col2 = st.columns(2)
                     with col1:
-                        if st.button(f"Approve #{request['id']}", key=f"approve_{request['id']}"):
+                        if st.button(f"Approve #{request['id']}", key=f"approve_{request['id']}_{idx}"):  # Adding idx to make key unique
                             update_reschedule_status(request['id'], 'Approved')
-                            st.success(f"Request #{request['id']} approved.")
+                            st.success(f"<i class='fa-solid fa-check-circle'></i> Request #{request['id']} approved.", icon=None)
                             st.rerun()
 
                     with col2:
-                        if st.button(f"Reject #{request['id']}", key=f"reject_{request['id']}"):
+                        if st.button(f"Reject #{request['id']}", key=f"reject_{request['id']}_{idx}"):  # Adding idx to make key unique
                             update_reschedule_status(request['id'], 'Rejected')
-                            st.warning(f"Request #{request['id']} rejected.")
+                            st.warning(f"<i class='fa-solid fa-times-circle'></i> Request #{request['id']} rejected.", icon=None)
                             st.rerun()
         else:
             st.info("No reschedule requests at the moment.")
+

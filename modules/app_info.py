@@ -9,7 +9,7 @@ def show_notice_box():
         border-radius: 10px;
         margin-bottom: 20px;
     ">
-        <h4 style="margin-top: 0;"><i class="fas fa-cogs"></i> Tool Guide</h4>
+        <h4 style="margin-top: 0;"><i class="fas fa-cogs"  style="color:#007BFF; margin-right: 8px;"></i> Tool Guide</h4>
         <ol style="padding-left: 20px; margin-top: 10px;">
             <li>Upload a valid ZIP file containing multiple resumes.</li>
             <li>Submit one batch per job description.</li>

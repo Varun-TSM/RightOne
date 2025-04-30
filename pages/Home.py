@@ -265,6 +265,9 @@ def homePage():
         # Button for demo
         if st.button("Try resume screener", key="hero_cta", use_container_width=True):
             # This would normally use switch_page, but now we'll just set a session state
+            st.markdown("""
+        <meta http-equiv="refresh" content="0; url='/?page=Resume%20Screening'" />
+    """, unsafe_allow_html=True)
             st.session_state['page'] = 'demo'
             st.rerun()
 

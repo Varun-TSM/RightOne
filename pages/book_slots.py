@@ -160,18 +160,20 @@ def book_slots():
                 reschedule_date_str = new_date.strftime("%Y-%m-%d")
                 reason = st.text_area("✏️ Reason for Rescheduling (Optional)")
 
+                # Fetch availability and bookings
                 all_availabilities = get_all_availabilities()
                 all_bookings = get_all_bookings()
 
-                # Build set of (interviewer_email, slot_date, slot_time) for booked slots
+                # Set of (interviewer_email, date, time) tuples for booked slots
                 booked_slots_set = set(
                     (booking['interviewer_email'], booking['slot_date'], booking['slot_time'][:5])
                     for booking in all_bookings
                 )
 
+                # Filter availability for selected date
                 slots_for_date = [slot for slot in all_availabilities if slot[2] == reschedule_date_str]
 
-                # Build map: slot_str -> list of available interviewers
+                # slot_str -> list of available interviewers
                 slot_interviewer_map = defaultdict(list)
 
                 for availability in slots_for_date:
@@ -182,50 +184,53 @@ def book_slots():
 
                     for slot_start in half_hour_slots:
                         slot_str = slot_start.strftime("%H:%M")
-
-                        # Skip if this slot is booked or is the same as the current booking
+                        # Avoid current booking slot and duplicates
                         if (
                             (interviewer_email, reschedule_date_str, slot_str) not in booked_slots_set
-                            and not is_candidate_already_booked_for_interviewer(candidate_email, interviewer_email, reschedule_date_str)
-                            and not (reschedule_date_str == current_date and slot_str == start_time_obj.strftime("%H:%M"))
+                            # and not is_candidate_already_booked_for_interviewer(candidate_email, interviewer_email, reschedule_date_str)
+                            and not (
+                                reschedule_date_str == current_date
+                                and slot_str == start_time_obj.strftime("%H:%M")
+                            )
                         ):
                             slot_interviewer_map[slot_str].append(interviewer_email)
 
+                # Display reschedule options
                 if slot_interviewer_map:
-                    st.markdown(f"<h5>✅ Available Time Slots on {new_date.strftime('%A, %d %B %Y')}</h5>", unsafe_allow_html=True)
+                    st.markdown(f"<h5> Available Time Slots on {new_date.strftime('%A, %d %B %Y')}</h5>", unsafe_allow_html=True)
                     cols = st.columns(4)
 
                     for idx, (slot_str, interviewers) in enumerate(slot_interviewer_map.items()):
-                        if not interviewers:
-                            continue
-                        col = cols[idx % 4]
-                        with col:
-                            if st.button(f"🕓 {slot_str}", key=f"reschedule_{slot_str}"):
-                                st.session_state["pending_reschedule"] = {
-                                    "slot_str": slot_str,
-                                    "interviewer": interviewers[0],
-                                    "date": reschedule_date_str,
-                                    "reason": reason,
-                                    "candidate_email": candidate_email
-                                }
+                        if interviewers:
+                            col = cols[idx % 4]
+                            with col:
+                                if st.button(f"🕓 {slot_str}", key=f"reschedule_{slot_str}"):
+                                    st.session_state["pending_reschedule"] = {
+                                        "slot_str": slot_str,
+                                        "interviewer": interviewers[0],  # Choosing the first available
+                                        "date": reschedule_date_str,
+                                        "reason": reason,
+                                        "candidate_email": candidate_email
+                                    }
 
-                    if "pending_reschedule" in st.session_state:
-                        req = st.session_state["pending_reschedule"]
-                        st.info(f"Confirm reschedule to {req['slot_str']} on {req['date']}?")
-                        confirm = st.button("✅ Confirm Reschedule")
-
-                        if confirm:
-                            submit_reschedule_request(
-                                candidate_email=req["candidate_email"],
-                                new_date=req["date"],
-                                new_time=f"{req['slot_str']}:00",
-                                reason=req["reason"]
-                            )
-                            st.success(f"Reschedule request for {req['slot_str']} on {req['date']} submitted!")
-                            del st.session_state["pending_reschedule"]
-                            st.stop()
                 else:
                     st.info("No available slots for the selected reschedule date.")
+
+                # Confirm reschedule
+                if "pending_reschedule" in st.session_state:
+                    req = st.session_state["pending_reschedule"]
+                    st.info(f"Confirm reschedule to {req['slot_str']} on {req['date']}?")
+                    if st.button("✅ Confirm Reschedule"):
+                        submit_reschedule_request(
+                            candidate_email=req["candidate_email"],
+                            new_date=req["date"],
+                            new_time=f"{req['slot_str']}:00",
+                            reason=req["reason"]
+                        )
+                        st.success(f"Reschedule request for {req['slot_str']} on {req['date']} submitted!")
+                        del st.session_state["pending_reschedule"]
+                        st.stop()
+
 
 
         else:
@@ -298,8 +303,8 @@ def book_slots():
                 # Show confirmation if booking is pending
                 if "pending_booking" in st.session_state:
                     booking = st.session_state["pending_booking"]
-                    st.info(f"Confirm booking for {booking['slot_str']} on {booking['date']}?")
-                    confirm = st.button("✅ Confirm Booking")
+                    st.info(f"Confirm slot for {booking['slot_str']} on {booking['date']}?")
+                    confirm = st.button("Slot Confirmed")
 
                     if confirm:
                         if not get_candidate_id(booking["candidate_email"]):

@@ -125,6 +125,21 @@ def get_interviewer_id(email):
 
 # ──────────────────────── CANDIDATE FUNCTIONS ──────────────────────── #
 
+def get_candidates():
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, name, email, phone, status FROM candidates")
+    rows = cursor.fetchall()
+    conn.close()
+    return [{"id": row[0], "name": row[1], "email": row[2], "phone": row[3], "status": row[4]} for row in rows]
+
+def update_status(candidate_id, new_status):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE candidates SET status = ? WHERE id = ?", (new_status, candidate_id))
+    conn.commit()
+    conn.close()
+
 def add_candidate(name, phone, email):
     conn = connect_db()
     cursor = conn.cursor()

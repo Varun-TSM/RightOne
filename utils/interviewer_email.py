@@ -19,7 +19,7 @@ We are currently organizing interviews for prospective candidates and would grea
 
 You can conveniently share your preferred time slots by visiting the following link:
 
-🔗 [Click here to provide your availability](https://your-calendar-link.com)  
+[Click here to provide your availability](https://your-calendar-link.com)  
 
 Your prompt response would be highly appreciated.
 

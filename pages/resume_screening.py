@@ -64,6 +64,11 @@ def Resume_Screener():
         margin-right: 8px;  /* Add a small space between icon and text */
         font-size: 18px;    /* Slightly larger icon size */
     }
+    
+    /*slider design*/
+    .stSlider {
+    width: 25%;
+    }
     /* Alert Wrapper - absolutely positioned */
     .stAlertWrapper {
         position: fixed;
@@ -117,7 +122,7 @@ def Resume_Screener():
         }
     </style>""", unsafe_allow_html=True)
     
-    st.markdown('<h1><i class="fas fa-robot"></i> rightOne - an HR assistant</h1>', unsafe_allow_html=True)
+    st.markdown('<h1><i class="fas fa-robot"  style="color:#007BFF; margin-right: 8px;"></i> rightOne - an HR assistant</h1>', unsafe_allow_html=True)
     st.write("")
     if "show_embedding_success" not in st.session_state:
         st.session_state.show_embedding_success = False
@@ -127,7 +132,7 @@ def Resume_Screener():
     col1, col2 = st.columns([1, 2])
 
     with col1:
-        st.markdown('<div style="padding-top: 10px;"><h5><i class="fas fa-file-archive"></i> Step 1: Upload Resumes (ZIP)</h5></div>', unsafe_allow_html=True)
+        st.markdown('<div style="padding-top: 10px;"><h5><i class="fas fa-file-archive"  style="color:#007BFF; margin-right: 8px;"></i> Step 1: Upload Resumes (ZIP)</h5></div>', unsafe_allow_html=True)
         uploaded_file = st.file_uploader("", type=["zip"])
         if uploaded_file and not st.session_state.get("resumes_parsed"):
             if st.button("Extract & Store Resumes"):
@@ -145,7 +150,7 @@ def Resume_Screener():
 
     with col2:
         # JD Text Input
-        st.markdown('<h5><i class="fas fa-file-signature"></i> Step 2: Paste Job Description</h5>', unsafe_allow_html=True)
+        st.markdown('<h5><i class="fas fa-file-signature"  style="color:#007BFF; margin-right: 8px;"></i> Step 2: Paste Job Description</h5>', unsafe_allow_html=True)
         jd_text = st.text_area("", height=200, placeholder="e.g. We're hiring a data scientist...")
         if jd_text and not st.session_state.get("jd_parsed"):  # ⛔ Show only if not already parsed
             if st.button('Parse JD'):
@@ -204,7 +209,7 @@ def Resume_Screener():
 
     if st.session_state.get("resumes_parsed") and st.session_state.get("jd_parsed"):
 
-        def get_top_matching_resumes(df: pd.DataFrame, jd_text: str, threshold: float = 0.3, top_n: int = 10):
+        def get_top_matching_resumes(df: pd.DataFrame, jd_text: str, threshold: float, top_n: int = 10):
             df["combined_text"] = df["combined_text"].apply(lambda x: " ".join(x) if isinstance(x, list) else str(x))
             embedding_model = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
             jd_vector = np.array(embedding_model.embed_documents([jd_text])[0]).reshape(1, -1)
@@ -213,41 +218,46 @@ def Resume_Screener():
             df["similarity_score"] = similarities
             return df[df["similarity_score"] > threshold].sort_values(by="similarity_score", ascending=False).head(top_n)
 
-        if parsed_df is not None and jd_df is not None:
-            if st.button("Get Top Matching Resumes"):
-                with st.spinner("Matching resumes..."):
-                    try:
-                        top_matches = get_top_matching_resumes(parsed_df, jd_df["combined_text"].iloc[0])
-                        if top_matches.empty:
-                            st.warning("No suitable matches found.")
-                        else:
-                            st.success("Top matches retrieved!")
-                            # Store top matching resumes in the database
-                            for _, row in top_matches.iterrows():
-                                name = row.get("name", "")
-                                phone = row.get("phone", "")
-                                email = row.get("email", "")
-                                if email:  # Ensure email is present
-                                    add_candidate(name, phone, email)
 
-                            st.info("Top matching candidates added to the database.")
-                            # Optionally, save the results to an Excel file
-                            output_excel = "top_resume_matches_full_details.xlsx"
-                            top_matches.to_excel(output_excel, index=False)
-                            st.download_button(
-                                label="Top Matching Resumes",
-                                data=open(output_excel, "rb").read(),
-                                file_name="top_resume_matches_full_details.xlsx",
-                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                            )
-                    except Exception as e:
-                        st.error(f"Error during matching: {e}")
+        if parsed_df is not None and jd_df is not None:
+                threshold = st.slider(
+                    "Select Similarity Threshold for Resume Matching",
+                    min_value=0.0,
+                    max_value=1.0,
+                    value=0.3,
+                    step=0.05,
+                    help="Higher threshold = stricter matching. Lower threshold = more resumes will be matched."
+                )
+
+                if st.button("Get Top Matching Resumes"):
+                    with st.spinner("Matching resumes..."):
+                        try:
+                            top_matches = get_top_matching_resumes(parsed_df, jd_df["combined_text"].iloc[0], threshold=threshold)
+                            if top_matches.empty:
+                                st.warning("No suitable matches found.")
+                            else:
+                                st.success("Top matches retrieved!")
+                                # Store top matching resumes in the database
+                                for _, row in top_matches.iterrows():
+                                    name = row.get("name", "")
+                                    phone = row.get("phone", "")
+                                    email = row.get("email", "")
+                                    if email:  # Ensure email is present
+                                        add_candidate(name, phone, email)
+
+                                st.info("Top matching candidates added to the database.")
+                                # Optionally, save the results to an Excel file
+                                output_excel = "top_resume_matches_full_details.xlsx"
+                                top_matches.to_excel(output_excel, index=False)
+                                st.download_button(
+                                    label="Top Matching Resumes",
+                                    data=open(output_excel, "rb").read(),
+                                    file_name="top_resume_matches_full_details.xlsx",
+                                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                )
+                        except Exception as e:
+                            st.error(f"Error during matching: {e}")
 
     # app information
     show_notice_box()
     
-if __name__ == "__main__":
-    Resume_Screener()
-
-
-
